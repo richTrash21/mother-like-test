@@ -13,9 +13,14 @@ class PauseSubState extends flixel.FlxSubState
 	{
 		super();
 
-		text = new FlxText(0, 60, 0, "PAUSED", 36);
+		text = new FlxText(0, 80, 0, "PAUSED", 36);
 		text.scrollFactor.set();
 		add(text.screenCenter(X));
+		
+		final helpText = new FlxText(3, "Press ESC to unpause.", 12);
+		helpText.scrollFactor.set();
+		helpText.y = FlxG.height - helpText.height - 1;
+		add(helpText);
 
 		_textTween = flixel.tweens.FlxTween.angle(text, -5, 5, 0.8, {ease: flixel.tweens.FlxEase.quadInOut, type: PINGPONG});
 	}
@@ -24,7 +29,7 @@ class PauseSubState extends flixel.FlxSubState
 	{
 		super.update(elapsed);
 
-		final factor = elapsed * 0.4;
+		final factor = elapsed * 0.3;
 		if (_zoomIn)
 			text.scale.add(factor, factor);
 		else
@@ -42,9 +47,9 @@ class PauseSubState extends flixel.FlxSubState
 			close();
 	}
 
-	override function close()
+	override function destroy()
 	{
 		_textTween.destroy();
-		super.close();
+		super.destroy();
 	}
 }
