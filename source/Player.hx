@@ -2,18 +2,39 @@ package;
 
 class Player extends flixel.FlxSprite
 {
-	final SPEED:Float = 300;
+	/**
+		Allows to controll whenever player can take input or not.
+		Used for cutscenes and stuff.
+	**/
+	public var readInput:Bool = true;
 
-	public function new(X:Float = 0, Y:Float = 0)
+	/**
+		Whenever player is moving or not.
+	**/
+	public var moving:Bool;
+
+	/**
+		Whenever player has just moved.
+	**/
+	public var justMoved:Bool;
+
+	/**
+		Whenever player has just stopped.
+	**/
+	public var justStopped:Bool;
+
+	final SPEED = 300.0;
+
+	public function new(X = 0.0, Y = 0.0)
 	{
-		super(X, Y, Assets.image("arrow"));
+		super(X, Y);
+		loadRotatedGraphic(Assets.image("arrow"), 8);
 		// makeGraphic(30, 50, FlxColor.RED);
 
 		// for collision
-		// offset.set(10, 20);
-		width = 30;
-		height = 30;
-		centerOffsets();
+		offset.set(20, 10);
+		setSize(30, 30);
+		// centerOffsets();
 
 		final DRAG = SPEED * 12;
 		drag.set(DRAG, DRAG);
@@ -25,35 +46,62 @@ class Player extends flixel.FlxSprite
 	}
 
 	/** Input system **/
-	function movement()
+	@:noCompletion inline function movement():Bool
 	{
-		final KEY_LEFT	= FlxG.keys.anyPressed([LEFT, A]);
-		final KEY_RIGHT	= FlxG.keys.anyPressed([RIGHT, D]);
-		final KEY_UP	= FlxG.keys.anyPressed([UP, W]);
-		final KEY_DOWN	= FlxG.keys.anyPressed([DOWN, S]);
+		// get main movement input
+		final KEY_LEFT  = FlxG.keys.anyPressed([LEFT, A]);
+		final KEY_RIGHT = FlxG.keys.anyPressed([RIGHT, D]);
+		final KEY_UP    = FlxG.keys.anyPressed([UP, W]);
+		final KEY_DOWN  = FlxG.keys.anyPressed([DOWN, S]);
 
+		// check if both way keys (or all at once) was pressed
+		final LEFT_AND_RIGHT = KEY_LEFT && KEY_RIGHT;
+		final UP_AND_DOWN    = KEY_UP && KEY_DOWN;
+		final ALL_KEYS       = LEFT_AND_RIGHT && UP_AND_DOWN;
+
+		// sprint check
 		final KEY_SPRINT = FlxG.keys.pressed.SHIFT;
 		final REAL_SPEED = KEY_SPRINT ? SPEED * 2 : SPEED;
 
-		if (KEY_LEFT || KEY_RIGHT || KEY_UP || KEY_DOWN)
+		// move player only when they really moved
+		final moved = KEY_LEFT || KEY_RIGHT || KEY_UP || KEY_DOWN;
+		if (moved && !ALL_KEYS)
 		{
-			if ((KEY_LEFT || KEY_RIGHT) && !(KEY_LEFT && KEY_RIGHT))
+			if ((KEY_LEFT || KEY_RIGHT) && !LEFT_AND_RIGHT)
 			{
 				velocity.x = KEY_RIGHT ? REAL_SPEED : -REAL_SPEED;
 			}
-			if ((KEY_UP || KEY_DOWN) && !(KEY_UP && KEY_DOWN))
+			if ((KEY_UP || KEY_DOWN) && !UP_AND_DOWN)
 			{
 				velocity.y = KEY_DOWN ? REAL_SPEED : -REAL_SPEED;
 			}
 
-			facing = FlxDirectionFlags.fromBools(KEY_LEFT, KEY_RIGHT, KEY_UP, KEY_DOWN);
+			// shitty fix for facing flag (yeah)
+			final prevFacing = facing;
+
+			final _LEFT  = LEFT_AND_RIGHT ? prevFacing.has(LEFT)  : KEY_LEFT;
+			final _RIGHT = LEFT_AND_RIGHT ? prevFacing.has(RIGHT) : KEY_RIGHT;
+			final _UP    = UP_AND_DOWN    ? prevFacing.has(UP)    : KEY_UP;
+			final _DOWN  = UP_AND_DOWN    ? prevFacing.has(DOWN)  : KEY_DOWN;
+
+			facing = FlxDirectionFlags.fromBools(_LEFT, _RIGHT, _UP, _DOWN);
 			angle = facing.degrees;
 		}
+		return moved;
 	}
 
-	override function update(elapsed:Float)
+	override public function update(elapsed:Float)
 	{
 		super.update(elapsed);
-		movement();
+
+		// calls movement function and gets whenever player has moved or not
+		if (readInput)
+		{
+			final _prevMoving = moving;
+			moving = movement();
+			justMoved = !_prevMoving && moving;
+			justStopped = _prevMoving && !moving;
+			// trace("Moving: " + moving + " | Just Moved: " + justMoved + " | Just Stopped: " + justStopped);
+		}
 	}
 }

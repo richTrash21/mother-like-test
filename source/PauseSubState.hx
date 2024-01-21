@@ -5,8 +5,8 @@ import flixel.tweens.FlxTween;
 
 class PauseSubState extends flixel.FlxSubState
 {
-	var text:FlxText;
-	@:noCompletion var _zoomIn:Bool = true;
+	@:noCompletion var text:FlxText;
+	@:noCompletion var _zoomIn = true;
 	@:noCompletion var _textTween:FlxTween;
 
 	public function new()
@@ -14,15 +14,19 @@ class PauseSubState extends flixel.FlxSubState
 		super();
 
 		text = new FlxText(0, 80, 0, "PAUSED", 36);
-		text.scrollFactor.set();
+		// text.scrollFactor.set();
 		add(text.screenCenter(X));
 		
-		final helpText = new FlxText(3, "Press ESC to unpause.", 12);
-		helpText.scrollFactor.set();
+		final helpText = new FlxText(3, #if flash 0, 0, #end "Press ESC to unpause.", 12);
+		// helpText.scrollFactor.set();
 		helpText.y = FlxG.height - helpText.height - 1;
 		add(helpText);
 
-		_textTween = flixel.tweens.FlxTween.angle(text, -5, 5, 0.8, {ease: flixel.tweens.FlxEase.quadInOut, type: PINGPONG});
+		_textTween = FlxTween.angle(text, -5, 5, 0.8, {ease: flixel.tweens.FlxEase.quadInOut, type: PINGPONG});
+
+		cameras = [FlxG.cameras.list[FlxG.cameras.list.length-1]];
+		if (FlxG.renderTile)
+			_bgSprite.cameras = cameras;
 	}
 
 	override function update(elapsed:Float)
@@ -41,10 +45,13 @@ class PauseSubState extends flixel.FlxSubState
 			_zoomIn = true;
 
 		if (bgColor != 0x88000000)
-			bgColor = FlxColor.interpolate(bgColor, 0x88000000, 0.2);
+			bgColor = FlxColor.interpolate(bgColor, 0x88000000, elapsed * 12);
 
 		if (FlxG.keys.justPressed.ESCAPE)
+		{
 			close();
+			FlxG.camera.followLerp = PlayState._cameraLerp;
+		}
 	}
 
 	override function destroy()

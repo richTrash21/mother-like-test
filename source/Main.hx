@@ -8,10 +8,19 @@ class Main extends openfl.display.Sprite
 	public function new()
 	{
 		super();
-		addChild(new flixel.FlxGame(0, 0, PlayState, 60, 60, true));
-		addChild(new debug.FPS(10, 10, 0xFFFFFF));
+		addChild(new Game(#if flash 640, 480, #end Init, 60, 60, true));
+		addChild(new debug.FPS(#if flash 10, 10, #end 0xFFFFFF));
 		// Lib.current.stage.align = "tl";
 		// Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
-		FlxG.autoPause = false;
+	}
+}
+
+class Game extends flixel.FlxGame
+{
+	override function create(_)
+	{
+		// TODO: custom sound tray
+		// _customSoundTray = 
+		super.create(_);
 	}
 }

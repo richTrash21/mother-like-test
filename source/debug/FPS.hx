@@ -26,52 +26,59 @@ class FPS extends openfl.text.TextField
 	**/
 	public var currentFPS(default, null):Int;
 
-	@:noCompletion private var memory(get, never):Int;
-	@:noCompletion private var cacheCount:Int;
-	@:noCompletion private var currentTime:Int;
-	@:noCompletion private var times:Array<Int>;
+	/**
+		The current garbage collector memory usage (does not work on html5)
+	**/
+	public var memory(get, never):Int;
 
-	public function new(x:Float = 10, y:Float = 10, color:Int = 0x000000)
+	@:noCompletion var cacheCount:Int;
+	@:noCompletion var currentTime:Int;
+	@:noCompletion var times:Array<Int>;
+
+	public function new(x = 10.0, y = 10.0, color = 0x000000)
 	{
 		super();
 
 		this.x = x;
 		this.y = y;
 
-		currentFPS = 0;
-		selectable = false;
-		mouseEnabled = false;
 		defaultTextFormat = new openfl.text.TextFormat("_sans", 12, color);
+		selectable = mouseEnabled = mouseWheelEnabled = false;
+		autoSize = LEFT;
 		text = "FPS: ";
 
-		cacheCount = 0;
-		currentTime = 0;
+		currentFPS = currentTime = cacheCount = 0;
 		times = [];
 
 		#if flash
 		addEventListener(Event.ENTER_FRAME, function(e)
 		{
-			var time = Lib.getTimer();
+			final time = Lib.getTimer();
 			__enterFrame(time - currentTime);
 		});
 		#end
 	}
 
 	// Event Handlers
-	@:noCompletion
-	private #if !flash override #end function __enterFrame(deltaTime:Int):Void
+	@:noCompletion #if !flash override #end function __enterFrame(deltaTime:Int):Void
 	{
 		currentTime += deltaTime;
 		times.push(currentTime);
 		while (times[0] < currentTime - 1000) times.shift();
 
 		final currentCount = times.length;
-		currentFPS = Std.int((currentCount + cacheCount) * 0.5);
-
 		if (currentCount != cacheCount)
 		{
+			final newFPS = Std.int((currentCount + cacheCount) * 0.5);
+			// caping new framerate to the maximum fps possible so it wont go above
+			currentFPS = newFPS > FlxG.updateFramerate ? FlxG.updateFramerate : newFPS;
+			cacheCount = currentCount;
+			
 			text = "FPS: " + currentFPS;
+
+			#if !html5 // doesn't work on browser
 			text += "\nMemory: " + flixel.util.FlxStringUtil.formatBytes(memory);
+			#end
 
 			#if (gl_stats && !disable_cffi && (!html5 || !canvas))
 			text += "\ntotalDC: " + Context3DStats.totalDrawCalls();
@@ -79,10 +86,14 @@ class FPS extends openfl.text.TextField
 			text += "\nstage3DDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE3D);
 			#end
 		}
-
-		cacheCount = currentCount;
 	}
 
-	inline function get_memory():Int
+	@:noCompletion inline function get_memory():Int
+	{
+		#if html5
+		throw "Can't get memory usage, since you are on browser target!";
+		#else
 		return cast(openfl.system.System.totalMemory, UInt);
+		#end
+	}
 }
