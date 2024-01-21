@@ -190,8 +190,10 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 			_resetTimer = 0.0;
 
 		// i love mother 2's battle backgrounds sm
+		#if !flash
 		if (FlxG.keys.justPressed.F1)
 			FlxG.openURL("youtu.be/zjQik7uwLIQ");
+		#end
 
 		// TODO: less bullshit like this
 		if (FlxG.keys.justPressed.X)
