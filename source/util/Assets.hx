@@ -7,56 +7,64 @@ package util;
 class Assets
 {
 	inline static final IMG_EXT = "png";
-	inline static final SND_EXT = "ogg";
+	inline static final SND_EXT = #if flash "mp3" #else "ogg" #end;
 
-	/**  Gets full image file path  **/
-	inline public static function image(key:String):String
+	/**
+		Simple internal function to get full file path
+	**/
+	@:noCompletion inline static function __filePath(key:String, ext:String, ?id:Int, ?library:String):String
 	{
-		return 'assets/images/$key.$IMG_EXT';
+		final name = id == null ? key : key + id;
+		final path = library == null ? "assets" : 'assets/$library';
+		return '$path/$name.$ext';
 	}
 
-	/**  Gets full sound file path  **/
-	inline public static function sound(key:String):String
+	/**
+		Gets full image file path
+	**/
+	inline public static function image(key:String, ?id:Int):String
 	{
-		return 'assets/sound/$key.$SND_EXT';
+		return __filePath(key, IMG_EXT, id, "images");
 	}
 
-	/**  Gets full music file path  **/
-	inline public static function music(key:String):String
+	/**
+		Gets full sound file path
+	**/
+	inline public static function sound(key:String, ?id:Int):String
 	{
-		return 'assets/music/$key.$SND_EXT';
+		return __filePath(key, SND_EXT, id, "sounds");
 	}
 
-	/**  Gets music track for overworld  **/
-	inline public static function worldMusic(key:String):String
+	/**
+		Gets full music file path
+	**/
+	inline public static function music(key:String, ?id:Int):String
 	{
-		return music('overworld/$key');
+		return __filePath(key, SND_EXT, id, "music");
 	}
 
-	/**  Gets music track for battle  **/
-	inline public static function battleMusic(key:String):String
+	/**
+		Gets music track for overworld
+	**/
+	inline public static function worldMusic(key:String, ?id:Int):String
 	{
-		return music('battle/$key');
+		return music('overworld/$key', id);
 	}
 
-	/**  Gets music track with a specific `id`. If `key` is `null`, only `id` will be used  **/
-	inline public static function musicID(?key:String, id = 0):String
+	/**
+		Gets music track for battle
+	**/
+	inline public static function battleMusic(key:String, ?id:Int):String
 	{
-		final name = key == null ? Std.string(id) : key + id;
-		return music(name);
+		return music('battle/$key', id);
 	}
 
-	/**  Gets overworld music track with a specific `id`. If `key` is `null`, only `id` will be used  **/
-	inline public static function worldMusicID(?key:String, id = 0):String
+	/**
+		Gets random image
+	**/
+	inline public static function randomImage(key:String, min = 0, ?max:Int, ?exclude:Array<Int>):String
 	{
-		final name = key == null ? Std.string(id) : key + id;
-		return worldMusic(name);
-	}
-
-	/**  Gets battle music track with a specific `id`. If `key` is `null`, only `id` will be used  **/
-	inline public static function battleMusicID(?key:String, id = 0):String
-	{
-		final name = key == null ? Std.string(id) : key + id;
-		return battleMusic(name);
+		final id = max == null ? min : FlxG.random.int(min, max, exclude);
+		return image(key, id);
 	}
 }

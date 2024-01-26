@@ -1,18 +1,23 @@
 package;
 
-// import openfl.Lib;
-// import openfl.display.StageScaleMode;
-
-class Main extends openfl.display.Sprite
+class Main // extends openfl.display.Sprite
 {
-	public function new()
+	@:allow(Game)
+	public static var fps(default, null):debug.FPS;
+
+	// idk but its kinda cool to lock game creation to the only class that can make it :trollface:
+	@:allow(ApplicationMain)
+	static function main()
+	{
+		openfl.Lib.application.window.stage.addChild(new Game(#if flash 640, 480, #end Init, 60, 60, true));
+	}
+
+	/*public function new()
 	{
 		super();
 		addChild(new Game(#if flash 640, 480, #end Init, 60, 60, true));
-		addChild(new debug.FPS(#if flash 10, 10, #end 0xFFFFFF));
-		// Lib.current.stage.align = "tl";
-		// Lib.current.stage.scaleMode = StageScaleMode.NO_SCALE;
-	}
+		FlxG.game.addChild(fps = new debug.FPS());
+	}*/
 }
 
 class Game extends flixel.FlxGame
@@ -22,5 +27,6 @@ class Game extends flixel.FlxGame
 		// TODO: custom sound tray
 		// _customSoundTray = 
 		super.create(_);
+		addChild(Main.fps = new debug.FPS());
 	}
 }

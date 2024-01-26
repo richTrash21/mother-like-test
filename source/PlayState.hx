@@ -5,6 +5,7 @@ import flixel.FlxSprite;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.group.FlxSpriteGroup;
 import haxe.Timer;
+import shaders.Displacement;
 #if !flash
 import shaders.WaveEffect;
 #end
@@ -18,6 +19,7 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 	public var levelCollision:FlxTypedGroup<FlxSprite>;
 	#if !flash
 	public var waveEffect:WaveEffect;
+	public var displacement:Displacement;
 	#end
 
 	public var cameraUI:FlxCamera; // TODO: add UI and set transition camera to the UI camera
@@ -55,7 +57,6 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		waveEffect.frequency = 15;
 		waveEffect.speed = 5;
 		backdrop.shader = waveEffect.shader;
-
 		FlxG.console.registerObject("waveTest", waveEffect);
 		#end
 
@@ -138,6 +139,11 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		FlxG.worldBounds.set(-1000, -1000, 2500, 2000);
 		FlxG.camera.follow(player, LOCKON, _cameraLerp);
 		FlxG.camera.setScrollBounds(FlxG.worldBounds.x, FlxG.worldBounds.right, FlxG.worldBounds.y, FlxG.worldBounds.bottom);
+
+		#if !flash
+		displacement = new Displacement();
+		FlxG.camera.filters = [new openfl.filters.ShaderFilter(displacement.shader)];
+		#end
 
 		super.create();
 		trace("PlayState created in " + Std.int((Timer.stamp() - startTime) * 1000) + "ms WOOOOOOOW :OO");
@@ -235,5 +241,11 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		super.transitionOut(OnExit);
 		persistentUpdate = true;
 		player.readInput = false;
+	}
+
+	override function destroy()
+	{
+		FlxG.console.removeByAlias("waveTest");
+		super.destroy();
 	}
 }

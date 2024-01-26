@@ -10,6 +10,10 @@ class Init extends flixel.FlxState
 	{
 		FlxG.autoPause = false;
 		// FlxG.scaleMode = new flixel.system.scaleModes.FillScaleMode();
+		#if debug
+		FlxG.console.registerClass(Assets);
+		FlxG.console.registerClass(openfl.display.Application);
+		#end
 
 		FlxTransitionableState.defaultTransIn = new TransitionData(TILES, FlxColor.BLACK, 0.4, FlxPoint.get(-1, -1));
 		FlxTransitionableState.defaultTransOut = new TransitionData(TILES, FlxColor.BLACK, 0.4, FlxPoint.get(-1, -1));

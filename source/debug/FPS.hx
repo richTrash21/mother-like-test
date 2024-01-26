@@ -5,12 +5,6 @@ import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
 #end
 
-#if flash
-import haxe.Timer;
-import openfl.Lib;
-import openfl.events.Event;
-#end
-
 /**
 	The FPS class provides an easy-to-use monitor to display
 	the current frame rate of an OpenFL project
@@ -35,7 +29,7 @@ class FPS extends openfl.text.TextField
 	@:noCompletion var currentTime:Int;
 	@:noCompletion var times:Array<Int>;
 
-	public function new(x = 10.0, y = 10.0, color = 0x000000)
+	public function new(x = 10.0, y = 10.0, color = 0xFFFFFF)
 	{
 		super();
 
@@ -51,9 +45,9 @@ class FPS extends openfl.text.TextField
 		times = [];
 
 		#if flash
-		addEventListener(Event.ENTER_FRAME, function(e)
+		addEventListener(openfl.events.Event.ENTER_FRAME, function(e)
 		{
-			final time = Lib.getTimer();
+			final time = openfl.Lib.getTimer();
 			__enterFrame(time - currentTime);
 		});
 		#end
