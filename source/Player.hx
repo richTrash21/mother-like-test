@@ -6,7 +6,7 @@ class Player extends flixel.FlxSprite
 		Allows to controll whenever player can take input or not.
 		Used for cutscenes and stuff.
 	**/
-	public var readInput:Bool = true;
+	public var readInput(default, set):Bool = true;
 
 	/**
 		Whenever player is moving or not.
@@ -23,9 +23,9 @@ class Player extends flixel.FlxSprite
 	**/
 	public var justStopped:Bool;
 
-	final SPEED = 300.0;
+	final SPEED = 300.;
 
-	public function new(X = 0.0, Y = 0.0)
+	public function new(X = 0., Y = 0.)
 	{
 		super(X, Y);
 		loadRotatedGraphic(Assets.image("arrow"), 8);
@@ -46,7 +46,7 @@ class Player extends flixel.FlxSprite
 	}
 
 	/** Input system **/
-	@:noCompletion inline function movement():Bool
+	@:noCompletion /*inline*/ function movement():Bool
 	{
 		// get main movement input
 		final KEY_LEFT  = FlxG.keys.anyPressed([LEFT, A]);
@@ -64,8 +64,8 @@ class Player extends flixel.FlxSprite
 		final REAL_SPEED = KEY_SPRINT ? SPEED * 2 : SPEED;
 
 		// move player only when they really moved
-		final moved = KEY_LEFT || KEY_RIGHT || KEY_UP || KEY_DOWN;
-		if (moved && !ALL_KEYS)
+		final MOVED = KEY_LEFT || KEY_RIGHT || KEY_UP || KEY_DOWN;
+		if (MOVED && !ALL_KEYS)
 		{
 			if ((KEY_LEFT || KEY_RIGHT) && !LEFT_AND_RIGHT)
 			{
@@ -87,7 +87,7 @@ class Player extends flixel.FlxSprite
 			facing = FlxDirectionFlags.fromBools(_LEFT, _RIGHT, _UP, _DOWN);
 			angle = facing.degrees;
 		}
-		return moved;
+		return MOVED;
 	}
 
 	override public function update(elapsed:Float)
@@ -103,5 +103,13 @@ class Player extends flixel.FlxSprite
 			justStopped = _prevMoving && !moving;
 			// trace("Moving: " + moving + " | Just Moved: " + justMoved + " | Just Stopped: " + justStopped);
 		}
+	}
+
+	@:noCompletion inline function set_readInput(Value:Bool):Bool
+	{
+		if (!Value) // if input was disabled - flip all movement related flags to false
+			moving = justMoved = justStopped = false;
+
+		return readInput = Value;
 	}
 }

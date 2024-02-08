@@ -50,14 +50,14 @@
 	<!-- Assets system -->
 	<!-- toby fox ass filesystem (aka you can view the music) -->
 	<assets if="flash"      path="assets/music"   library="music"   exclude="*.ogg" />
-	<assets if="flash"      path="assets/sounds"  library="sounds"  exclude="*.ogg" embed="true" />
+	<assets if="flash"      path="assets/sounds"  library="sounds"  exclude="*.ogg" />
 	<assets unless="flash"  path="assets/music"   library="music"   exclude="*.mp3" />
-	<assets unless="flash"  path="assets/sounds"  library="sounds"  exclude="*.mp3" embed="true" />
-	<assets path="assets"   embed="true"/>
+	<assets unless="flash"  path="assets/sounds"  library="sounds"  exclude="*.mp3" />
+	<assets path="assets"   /> <!-- embed="true" -->
 
 	<!-- Assets libraries configs -->
 	<library name="music"    preload="true" />
-	<library name="sounds"   preload="true" embed="true" />
+	<library name="sounds"   preload="true" />
 	<library name="default"  preload="true" />
 
 	<!-- _______________________________ Libraries ______________________________ -->
@@ -68,15 +68,18 @@
 	<haxelib name="flixel-addons" />
 
 	<!--In case you want to use the ui package-->
-	<haxelib name="flixel-ui" />
+	<!-- <haxelib name="flixel-ui" /> -->
 
 	<!--In case you want to use nape with flixel-->
 	<!--<haxelib name="nape-haxe4" />-->
 
 	<!--Debug server for VSCode debuging duhh-->
 	<haxelib name="hxcpp-debug-server" if="debug" />
+	<haxelib name="flixel-studio"      if="debug" />
 
 	<!-- ______________________________ Haxedefines _____________________________ -->
+
+	<haxedef name="SHOW_FPS" if="debug" />
 
 	<!--Enable the Flixel core recording system-->
 	<!--<haxedef name="FLX_RECORD" />-->

@@ -1,18 +1,33 @@
 package util;
 
+enum abstract DataType(String) from String from DataType to String
+{
+	var PNG = "png";
+	var OGG = "ogg";
+	var MP3 = "mp3";
+	var TTF = "ttf";
+	var OTF = "otf";
+	var OGMO = "ogmo";
+	var JSON = "json";
+
+	var FONT = TTF;
+	var IMAGE = PNG;
+	var SOUND = #if flash MP3 #else OGG #end;
+}
+
 /**
 	Util for getting assets paths
 **/
 // @:build(flixel.system.FlxAssets.buildFileReferences("assets", true))
 class Assets
 {
-	inline static final IMG_EXT = "png";
-	inline static final SND_EXT = #if flash "mp3" #else "ogg" #end;
+	/**  Say hi to test! :D  **/
+	static var test = "I am Test!";
 
 	/**
 		Simple internal function to get full file path
 	**/
-	@:noCompletion inline static function __filePath(key:String, ext:String, ?id:Int, ?library:String):String
+	@:noCompletion private inline static function __filePath(key:String, ext:DataType, ?id:Int, ?library:String):String
 	{
 		final name = id == null ? key : key + id;
 		final path = library == null ? "assets" : 'assets/$library';
@@ -24,7 +39,7 @@ class Assets
 	**/
 	inline public static function image(key:String, ?id:Int):String
 	{
-		return __filePath(key, IMG_EXT, id, "images");
+		return __filePath(key, IMAGE, id, "images");
 	}
 
 	/**
@@ -32,7 +47,7 @@ class Assets
 	**/
 	inline public static function sound(key:String, ?id:Int):String
 	{
-		return __filePath(key, SND_EXT, id, "sounds");
+		return __filePath(key, SOUND, id, "sounds");
 	}
 
 	/**
@@ -40,7 +55,7 @@ class Assets
 	**/
 	inline public static function music(key:String, ?id:Int):String
 	{
-		return __filePath(key, SND_EXT, id, "music");
+		return __filePath(key, SOUND, id, "music");
 	}
 
 	/**
@@ -66,5 +81,21 @@ class Assets
 	{
 		final id = max == null ? min : FlxG.random.int(min, max, exclude);
 		return image(key, id);
+	}
+
+	/**
+		File from data folder
+	**/
+	inline public static function data(key:String, ext:DataType):String
+	{
+		return __filePath(key, ext, "data");
+	}
+
+	/**
+		Full font path.
+	**/
+	inline public static function font(key:String):String
+	{
+		return __filePath(key, FONT, "fonts");
 	}
 }

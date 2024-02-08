@@ -1,5 +1,6 @@
 package debug;
 
+#if SHOW_FPS
 #if gl_stats
 import openfl.display._internal.stats.Context3DStats;
 import openfl.display._internal.stats.DrawCallContext;
@@ -29,7 +30,7 @@ class FPS extends openfl.text.TextField
 	@:noCompletion var currentTime:Int;
 	@:noCompletion var times:Array<Int>;
 
-	public function new(x = 10.0, y = 10.0, color = 0xFFFFFF)
+	public function new(x = 10., y = 10., color = 0xFFFFFF)
 	{
 		super();
 
@@ -45,7 +46,7 @@ class FPS extends openfl.text.TextField
 		times = [];
 
 		#if flash
-		addEventListener(openfl.events.Event.ENTER_FRAME, function(e)
+		addEventListener(openfl.events.Event.ENTER_FRAME, (e) ->
 		{
 			final time = openfl.Lib.getTimer();
 			__enterFrame(time - currentTime);
@@ -61,25 +62,25 @@ class FPS extends openfl.text.TextField
 		while (times[0] < currentTime - 1000) times.shift();
 
 		final currentCount = times.length;
-		if (currentCount != cacheCount)
+		if (currentCount != cacheCount /*&& visible*/)
 		{
-			final newFPS = Std.int((currentCount + cacheCount) * 0.5);
+			final newFPS = Std.int((currentCount + cacheCount) * .5);
 			// caping new framerate to the maximum fps possible so it wont go above
 			currentFPS = newFPS > FlxG.updateFramerate ? FlxG.updateFramerate : newFPS;
 			cacheCount = currentCount;
-			
-			text = "FPS: " + currentFPS;
-
-			#if !html5 // doesn't work on browser
-			text += "\nMemory: " + flixel.util.FlxStringUtil.formatBytes(memory);
-			#end
-
-			#if (gl_stats && !disable_cffi && (!html5 || !canvas))
-			text += "\ntotalDC: " + Context3DStats.totalDrawCalls();
-			text += "\nstageDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE);
-			text += "\nstage3DDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE3D);
-			#end
 		}
+
+		text = "FPS: " + currentFPS;
+
+		#if !html5 // doesn't work on browser
+		text += "\nMemory: " + flixel.util.FlxStringUtil.formatBytes(memory);
+		#end
+
+		#if (gl_stats && !disable_cffi && (!html5 || !canvas))
+		text += "\ntotalDC: " + Context3DStats.totalDrawCalls();
+		text += "\nstageDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE);
+		text += "\nstage3DDC: " + Context3DStats.contextDrawCalls(DrawCallContext.STAGE3D);
+		#end
 	}
 
 	@:noCompletion inline function get_memory():Int
@@ -87,7 +88,8 @@ class FPS extends openfl.text.TextField
 		#if html5
 		throw "Can't get memory usage, since you are on browser target!";
 		#else
-		return cast(openfl.system.System.totalMemory, UInt);
+		return #if cpp cast(openfl.system.System.totalMemory, UInt) #else openfl.system.System.totalMemory #end;
 		#end
 	}
 }
+#end

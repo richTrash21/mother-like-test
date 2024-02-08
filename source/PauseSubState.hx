@@ -14,15 +14,17 @@ class PauseSubState extends flixel.FlxSubState
 		super();
 
 		text = new FlxText(0, 80, 0, "PAUSED", 36);
+		// text.font = Assets.font("sans");
 		// text.scrollFactor.set();
 		add(text.screenCenter(X));
 		
-		final helpText = new FlxText(3, #if flash 0, 0, #end "Press ESC to unpause.", 12);
+		final helpText = new FlxText(3, "Press ENTER to unpause.", 12);
+		// helpText.font = Assets.font("sans");
 		// helpText.scrollFactor.set();
 		helpText.y = FlxG.height - helpText.height - 1;
 		add(helpText);
 
-		_textTween = FlxTween.angle(text, -5, 5, 0.8, {ease: flixel.tweens.FlxEase.quadInOut, type: PINGPONG});
+		_textTween = FlxTween.angle(text, -5, 5, .8, {ease: flixel.tweens.FlxEase.quadInOut, type: PINGPONG});
 
 		cameras = [FlxG.cameras.list[FlxG.cameras.list.length-1]];
 		if (FlxG.renderTile)
@@ -33,7 +35,7 @@ class PauseSubState extends flixel.FlxSubState
 	{
 		super.update(elapsed);
 
-		final factor = elapsed * 0.3;
+		final factor = elapsed * .3;
 		if (_zoomIn)
 			text.scale.add(factor, factor);
 		else
@@ -41,13 +43,13 @@ class PauseSubState extends flixel.FlxSubState
 
 		if (text.scale.x > 1.15)
 			_zoomIn = false;
-		else if (text.scale.x < 0.85)
+		else if (text.scale.x < .85)
 			_zoomIn = true;
 
 		if (bgColor != 0x88000000)
 			bgColor = FlxColor.interpolate(bgColor, 0x88000000, elapsed * 12);
 
-		if (FlxG.keys.justPressed.ESCAPE)
+		if (FlxG.keys.justPressed.ENTER)
 		{
 			close();
 			FlxG.camera.followLerp = PlayState._cameraLerp;
