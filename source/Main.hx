@@ -30,7 +30,9 @@ class Main // extends openfl.display.Sprite
 private class Game extends flixel.FlxGame
 {
 	// undertale
+	#if sys
 	@:noCompletion var _exit:TextField;
+	#end
 
 	override function create(e)
 	{
@@ -38,14 +40,16 @@ private class Game extends flixel.FlxGame
 		// _customSoundTray = 
 		super.create(e);
 
+		#if sys
 		// undertale
 		_exit = new TextField();
 		_exit.defaultTextFormat = new openfl.text.TextFormat(Assets.font("sans") /* SAAAAANS */, 24, 0xFFFFFF, true);
 		_exit.selectable = _exit.mouseEnabled = _exit.mouseWheelEnabled = false;
 		_exit.autoSize = LEFT;
-		_exit.alpha = 0.;
+		_exit.alpha = 0;
 		addChild(_exit);
-		_exit.x = 2.;
+		_exit.x = 2;
+		#end
 
 		#if SHOW_FPS
 		addChild(Main.fps = new debug.FPS());
@@ -81,20 +85,25 @@ private class Game extends flixel.FlxGame
 			if (this.filters != null && this.filters.length > 0)
 				resetSpriteCache(this);
 
+			#if sys
 			_exit.scaleX = FlxG.scaleMode.scale.x;
 			_exit.scaleY = FlxG.scaleMode.scale.y;
-			_exit.y = FlxG.scaleMode.gameSize.y - 28. * _exit.scaleY;
+			_exit.y = FlxG.scaleMode.gameSize.y - 28 * _exit.scaleY;
+			#end
 		});
 	}
 
 	override function step()
 	{
 		super.step();
+		#if sys
 		undertale();
+		#end
 	}
 
 	@:noCompletion var _timer = 0.;
 
+	#if sys
 	/**  Undertale  **/
 	@:noCompletion inline function undertale()
 	{
@@ -112,4 +121,5 @@ private class Game extends flixel.FlxGame
 		else
 			_timer = 0.;
 	}
+	#end
 }
