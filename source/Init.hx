@@ -23,7 +23,7 @@ class Init extends flixel.FlxState
 		FlxTransitionableState.defaultTransIn = new TransitionData(TILES, FlxColor.BLACK, .3, FlxPoint.get(-1, -1));
 		FlxTransitionableState.defaultTransOut = new TransitionData(TILES, FlxColor.BLACK, .3, FlxPoint.get(-1, -1));
 
-		FlxG.switchState(new PlayState());
+		FlxG.switchState(#if (flixel >= "5.6.0") PlayState.new #else new PlayState() #end);
 		// trace(haxe.macro.Context.getDefines());
 	}
 }

@@ -1,8 +1,8 @@
 package util;
 
 import flixel.group.FlxGroup.FlxTypedGroup;
-import flixel.FlxCamera;
 import flixel.system.FlxAssets.FlxShader;
+import flixel.FlxCamera;
 import shaders.*;
 
 class ShaderUtil

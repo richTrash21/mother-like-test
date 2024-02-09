@@ -45,6 +45,8 @@ class FPS extends openfl.text.TextField
 		currentFPS = currentTime = cacheCount = 0;
 		times = [];
 
+		shader = new shaders.Outline.OutlineShader(2);
+
 		#if flash
 		addEventListener(openfl.events.Event.ENTER_FRAME, (e) ->
 		{

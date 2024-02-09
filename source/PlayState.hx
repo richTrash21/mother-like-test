@@ -43,6 +43,8 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 	public var UIGroup:FlxSpriteGroup;
 	public var playerStats:FlxSprite;
 
+	public function new() { super(); }
+
 	override public function create()
 	{
 		final startTime = Timer.stamp();
