@@ -1,64 +1,72 @@
 package;
 
-import flixel.text.FlxText;
 import flixel.tweens.FlxTween;
+import flixel.text.FlxText;
 
 class PauseSubState extends flixel.FlxSubState
 {
 	@:noCompletion var text:FlxText;
-	@:noCompletion var _zoomIn = true;
-	@:noCompletion var _textTween:FlxTween;
+	@:noCompletion var textTween:FlxTween;
 
 	public function new()
 	{
 		super();
+		_bgColor = 0;
 
 		text = new FlxText(0, 80, 0, "PAUSED", 36);
 		// text.font = Assets.font("sans");
-		// text.scrollFactor.set();
 		add(text.screenCenter(X));
 		
 		final helpText = new FlxText(3, "Press ENTER to unpause.", 12);
 		// helpText.font = Assets.font("sans");
-		// helpText.scrollFactor.set();
 		helpText.y = FlxG.height - helpText.height - 1;
 		add(helpText);
 
-		_textTween = FlxTween.angle(text, -5, 5, .8, {ease: flixel.tweens.FlxEase.quadInOut, type: PINGPONG});
+		textTween = FlxTween.angle(text, -5, 5, .8, {ease: flixel.tweens.FlxEase.quadInOut, type: PINGPONG});
 
 		cameras = [FlxG.cameras.list[FlxG.cameras.list.length-1]];
 		if (FlxG.renderTile)
 			_bgSprite.cameras = cameras;
 	}
 
+	@:noCompletion var __zoomIn = true;
+	// @:noCompletion var __doFade = true;
+	@:noCompletion var __fadeColor:FlxColor = 0x88000000;
+
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
 
 		final factor = elapsed * .3;
-		if (_zoomIn)
+		if (__zoomIn)
 			text.scale.add(factor, factor);
 		else
 			text.scale.subtract(factor, factor);
 
 		if (text.scale.x > 1.15)
-			_zoomIn = false;
+			__zoomIn = false;
 		else if (text.scale.x < .85)
-			_zoomIn = true;
+			__zoomIn = true;
 
-		if (bgColor != 0x88000000)
-			bgColor = FlxColor.interpolate(bgColor, 0x88000000, elapsed * 12);
+		if (bgColor.alpha < __fadeColor.alpha)
+		{
+			bgColor.alphaFloat = FlxMath.lerp(bgColor.alphaFloat, __fadeColor.alphaFloat, elapsed * 10.4);
+			if (FlxG.renderTile)
+				bgColor = bgColor; // trigger set_bgColor()
+			// trace("interpolating color: 0x" + bgColor.hex(8) + " (" + bgColor + ")");
+			// trace(bgColor.getColorInfo());
+		}
 
 		if (FlxG.keys.justPressed.ENTER)
 		{
 			close();
-			FlxG.camera.followLerp = PlayState._cameraLerp;
+			FlxG.camera.followLerp = PlayState.__cameraLerp;
 		}
 	}
 
 	override function destroy()
 	{
-		_textTween.destroy();
+		textTween.destroy();
 		super.destroy();
 	}
 }

@@ -19,16 +19,16 @@ class FPS extends openfl.text.TextField
 	/**
 		The current frame rate, expressed using frames-per-second
 	**/
-	public var currentFPS(default, null):Int;
+	public var currentFPS(default, null):Int = 0;
 
 	/**
 		The current garbage collector memory usage (does not work on html5)
 	**/
 	public var memory(get, never):Int;
 
-	@:noCompletion var cacheCount:Int;
-	@:noCompletion var currentTime:Int;
-	@:noCompletion var times:Array<Int>;
+	@:noCompletion var cacheCount:Int = 0;
+	@:noCompletion var currentTime:Int = 0;
+	@:noCompletion var times:Array<Int> = new Array();
 
 	public function new(x = 10., y = 10., color = 0xFFFFFF)
 	{
@@ -41,9 +41,6 @@ class FPS extends openfl.text.TextField
 		selectable = mouseEnabled = mouseWheelEnabled = false;
 		autoSize = LEFT;
 		text = "FPS: ";
-
-		currentFPS = currentTime = cacheCount = 0;
-		times = [];
 
 		shader = new shaders.Outline.OutlineShader(2);
 
@@ -61,14 +58,15 @@ class FPS extends openfl.text.TextField
 	{
 		currentTime += deltaTime;
 		times.push(currentTime);
-		while (times[0] < currentTime - 1000) times.shift();
+		while (times[0] < currentTime - 1000)
+			times.shift();
 
 		final currentCount = times.length;
 		if (currentCount != cacheCount /*&& visible*/)
 		{
-			final newFPS = Std.int((currentCount + cacheCount) * .5);
+			final newFPS = ((currentCount + cacheCount) * .5).int();
 			// caping new framerate to the maximum fps possible so it wont go above
-			currentFPS = newFPS > FlxG.updateFramerate ? FlxG.updateFramerate : newFPS;
+			currentFPS = FlxMath.minInt(newFPS, FlxG.updateFramerate);
 			cacheCount = currentCount;
 		}
 

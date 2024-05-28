@@ -1,62 +1,56 @@
 package;
 
+import flixel.util.typeLimit.NextState.InitialState;
+import flixel.FlxState;
+
 import openfl.text.TextField;
+
 import haxe.PosInfos;
 
-class Main // extends openfl.display.Sprite
+class Main
 {
 	#if SHOW_FPS
 	@:allow(Game)
 	public static var fps(default, null):debug.FPS;
 	#end
 
-	// idk but its kinda cool to lock game creation to the only class that can make it :trollface:
-	// @:allow(ApplicationMain)
 	static function main()
 	{
-		openfl.Lib.application.window.stage.addChild(new Game(Init, 60/*, 60, true*/));
+		openfl.Lib.application.window.stage.addChild(new Game(PlayState, 60/*, 60, true*/));
 		#if flixel_studio
 		flixel.addons.studio.FlxStudio.create();
 		#end
 	}
-
-	/*public function new()
-	{
-		super();
-		addChild(new Game(#if flash 640, 480, #end Init, 60, 60, true));
-		// FlxG.game.addChild(fps = new debug.FPS());
-	}*/
 }
 
-private class Game extends flixel.FlxGame
+@:noCompletion private class Game extends flixel.FlxGame
 {
-	// undertale
 	#if sys
-	@:noCompletion var _exit:TextField;
+	// undertale
+	@:noCompletion var __exit:TextField;
 	#end
+
+	@:allow(LogEntry) inline static var __logTimeout = 5.;
+	inline static var __logLen = 40;
 
 	#if debug
-	static var _logTimeout = 5.;
-	static var _logLen = 40;
-
-	var _logText:TextField;
-	var _log:Array<LogEntry>;
+	var __logDisplay:TextField;
 	#end
-	var _fullLog = "";
+	var __log:Array<LogEntry>;
+	var LOG_FULL = "";
 
-	public function new(gameWidth = 0, gameHeight = 0, ?initialState:Class<flixel.FlxState>, fps = 60)
+	public function new(gameWidth = 0, gameHeight = 0, ?initialState: #if (flixel >= "5.6.0") InitialState #else Class<FlxState> #end, fps = 60)
 	{
-		#if debug
-		_log = [for (i in 0..._logLen) new LogEntry("", _logTimeout)];
-		#end
+		__log = [for (i in 0...__logLen) new LogEntry()];
+		Init.__init = initialState;
 
 		haxe.Log.trace = (v:Dynamic, ?pos:PosInfos) ->
 		{
 			// based on haxe.Log.formatOutput()
 			inline function formatOutput(v:Dynamic, pos:PosInfos):String
 			{
-				final t = "<" + Date.now().toString().substr(11, 8) + ">";
-				var s = " > " + Std.string(v);
+				/*final t = "<" + Date.now().toString().substr(11, 8) + ">";
+				var s = " > " + v.string();
 				if (pos == null)
 					return t + s;
 				var p = pos.fileName + ":" + pos.lineNumber;
@@ -66,17 +60,31 @@ private class Game extends flixel.FlxGame
 					p += " - " + t + "()";
 				}
 				if (pos.customParams != null)
-					for (v in pos.customParams)
-						s += ", " + Std.string(v);
-				return t + " [" + p + "]" + s;
+					for (_v in pos.customParams)
+						s += ", " + _v.string();
+				return t + " [" + p + "]" + s;*/
+				var s = v.string();
+				if (pos == null)
+					return s;
+				if (pos.customParams != null)
+					for (_v in pos.customParams)
+						s += ", " + _v.string();
+				return s;
 			}
 
-			final str = formatOutput(v, pos);
-			_fullLog += str + "\n";
-			#if debug
-			// if (_log != null)
-				_log.unshift(_log.pop().set(str, pos));
-			#end
+			var p:String = null;
+			if (pos != null)
+			{
+				p = pos.fileName + ":" + pos.lineNumber;
+				if (pos.methodName != null && pos.methodName.length > 0)
+					p += " - " + (pos.className == null || pos.className.length == 0 ? pos.methodName : pos.className + "." + pos.methodName) + "()";
+			}
+
+			final e = __log.pop().set(p, formatOutput(v, pos), Date.now());
+			__log.unshift(e);
+
+			final str = e.toString();
+			LOG_FULL += '$str\n';
 
 			// vanilla trace
 			#if js
@@ -91,7 +99,10 @@ private class Game extends flixel.FlxGame
 			#end
 		}
 
-		super(gameWidth, gameHeight, initialState, fps, fps, true);
+		super(gameWidth, gameHeight, Init, fps, fps, true);
+		#if (sys && debug)
+		trace("\"OMG, THIS GAME MESSES WITH YOUR COMPUTER!!🤯\"\nMesses with your computer in question:\nur username: " + Sys.environment()["USERNAME"]);
+		#end
 	}
 
 	override function create(e)
@@ -104,13 +115,13 @@ private class Game extends flixel.FlxGame
 
 		#if sys
 		// undertale
-		_exit = new TextField();
-		_exit.defaultTextFormat = new openfl.text.TextFormat(Assets.font("sans") /* SAAAAANS */, 24, 0xFFFFFF, true);
-		_exit.selectable = _exit.mouseEnabled = _exit.mouseWheelEnabled = false;
-		_exit.autoSize = LEFT;
-		_exit.alpha = 0;
-		addChild(_exit);
-		_exit.x = 2;
+		__exit = new TextField();
+		__exit.defaultTextFormat = new openfl.text.TextFormat(AssetsPath.font("sans") /* SAAAAANS */, 24, 0xFFFFFF, true);
+		__exit.selectable = __exit.mouseEnabled = __exit.mouseWheelEnabled = false;
+		__exit.autoSize = LEFT;
+		__exit.alpha = 0;
+		addChild(__exit);
+		__exit.x = 2;
 		#end
 
 		#if SHOW_FPS
@@ -118,23 +129,28 @@ private class Game extends flixel.FlxGame
 		#end
 
 		#if debug
-		_logText = new TextField();
-		_logText.defaultTextFormat = new openfl.text.TextFormat("_sans", 10, 0xFFFFFF, true);
-		_logText.selectable = _logText.mouseEnabled = _logText.mouseWheelEnabled = false;
-		_logText.multiline = _logText.wordWrap = true;
-		_logText.autoSize = LEFT;
-		_logText.width = 400;
-		addChild(_logText);
-		_logText.x = 10;
-		_logText.y = 50;
+		__logDisplay = new TextField();
+		__logDisplay.defaultTextFormat = new openfl.text.TextFormat("_sans", 10, 0xFFFFFF, true);
+		__logDisplay.selectable = __logDisplay.mouseEnabled = __logDisplay.mouseWheelEnabled = false;
+		__logDisplay.multiline = __logDisplay.wordWrap = true;
+		__logDisplay.autoSize = LEFT;
+		__logDisplay.width = 400;
+		addChild(__logDisplay);
+		__logDisplay.x = 10;
+		__logDisplay.y = 45;
 
-		_logText.shader = new shaders.Outline.OutlineShader(1.25);
+		__logDisplay.shader = new shaders.Outline.OutlineShader(1.25);
 
 		FlxG.console.registerFunction("clearGameLog", () ->
 		{
-			_logText.text = "";
-			for (entry in _log)
-				entry.time = _logTimeout;
+			__logDisplay.text = "";
+			for (entry in __log)
+			{
+				entry.source = null;
+				entry.text = null;
+				entry.time = null;
+				entry._timeout = __logTimeout;
+			}
 		}
 		);
 		#end
@@ -142,105 +158,81 @@ private class Game extends flixel.FlxGame
 		// stolen shader coord fix :trollface:
 		FlxG.signals.gameResized.add((w, h) ->
 		{
-			// @:access(openfl.display.BitmapData)
-			inline function resetSpriteCache(sprite:openfl.display.Sprite)
-			{
-				/*if (sprite.__cacheBitmap != null)
-				{
-					sprite.__cacheBitmap.__cleanup();
-					sprite.__cacheBitmap = null;
-				}
-		
-				if (sprite.__cacheBitmapData != null)
-				{
-					sprite.__cacheBitmapData.dispose();
-					sprite.__cacheBitmapData = null;
-				}*/
-				sprite.__cleanup();
-			}
-
 			if (FlxG.cameras.list.length == 1 && FlxG.camera.filters != null && FlxG.camera.filters.length > 0)
-				resetSpriteCache(FlxG.camera.flashSprite);
+				FlxG.camera.flashSprite.__cleanup();
 			else
 				for (camera in FlxG.cameras.list)
 					if (camera.filters != null && camera.filters.length > 0)
-						resetSpriteCache(camera.flashSprite);
+						camera.flashSprite.__cleanup();
 
 			if (this.filters != null && this.filters.length > 0)
-				resetSpriteCache(this);
+				this.__cleanup();
 
 			#if sys
-			_exit.scaleX = FlxG.scaleMode.scale.x;
-			_exit.scaleY = FlxG.scaleMode.scale.y;
-			_exit.y = FlxG.scaleMode.gameSize.y - 28 * _exit.scaleY;
-			#end
-
-			#if debug
-			// _logLen = Math.ceil((h - _logText.y) / 12);
+			__exit.scaleX = FlxG.scaleMode.scale.x;
+			__exit.scaleY = FlxG.scaleMode.scale.y;
+			__exit.y = FlxG.scaleMode.gameSize.y - 28 * __exit.scaleY;
 			#end
 		});
 	}
 
-	#if debug
-	// @:noCompletion var __log__timeout = 0.;
-	#end
-
 	override function step()
 	{
 		super.step();
-
-		#if debug
-		// __log__timeout += FlxG.elapsed;
-		// if (__log__timeout >= 1) // update log every second instead of each step() call
-		// {
-			updateLog(FlxG.elapsed);
-			// __log__timeout = 0;
-		// }
-		#end
-
-		#if sys
-		undertale(FlxG.elapsed);
-		#end
+		#if debug __updateLog(FlxG.elapsed); #end
+		#if sys __undertale(FlxG.elapsed); #end
 	}
 
 	#if debug
-	@:noCompletion function updateLog(e:Float)
+	@:noCompletion /*inline*/ function __updateLog(e:Float)
 	{
 		var str = "";
 		var entry:LogEntry;
-		for (i in 0..._logLen)
-		{
-			entry = _log[i];
-			if (entry == null || entry.time > _logTimeout)
-				continue;
 
-			entry.time += e;
-			if (entry.time < _logTimeout && entry.text.length > 0)
-				str += entry.text + "\n";
+		if (__log[0]._timeout <= __logTimeout)
+		{
+			for (i in 0...__logLen)
+			{
+				entry = __log[i];
+				if (entry == null || entry._timeout > __logTimeout)
+					continue;
+
+				entry._timeout += e;
+				if (entry._timeout < __logTimeout && entry.text.length > 0)
+				{
+					str += entry.toString();
+					if (i < __logLen-1)
+						str += "\n";
+				}
+			}
 		}
-		_logText.text = str;
+
+		__logDisplay.text = str;
 	}
 	#end
 
+	#if sys
 	@:noCompletion var __exit__timer = 0.;
 
-	#if sys
-	/**  Undertale  **/
-	@:noCompletion /*inline*/ function undertale(e:Float)
+	/**
+		Undertale
+	**/
+	@:noCompletion /*inline*/ function __undertale(e:Float)
 	{
 		final a = FlxG.keys.pressed.ESCAPE ? e : -e;
-		if (_exit.alpha == 0 && a < 0)
+		if (__exit.alpha == 0 && a < 0)
 			return;
 
-		_exit.alpha += a;
+		__exit.alpha += a;
 
-		final dots = _exit.alpha < .4 ? "." : _exit.alpha < .6 ? ".." : _exit.alpha < .8 ? "..." : "....";
-		_exit.text = "EXITING" + dots;
+		final dots = __exit.alpha < .4 ? "." : __exit.alpha < .6 ? ".." : __exit.alpha < .8 ? "..." : "....";
+		__exit.text = "EXITING" + dots;
 
-		if (_exit.alpha == 1.)
+		if (__exit.alpha == 1.)
 		{
 			__exit__timer += e;
-			if (__exit__timer > .3) Sys.exit(0);
+			if (__exit__timer > .3)
+				Sys.exit(0);
 		}
 		else
 			__exit__timer = 0.;
@@ -248,34 +240,43 @@ private class Game extends flixel.FlxGame
 	#end
 }
 
-#if debug
-private final class LogEntry
+@:noCompletion /*private*/ final class LogEntry
 {
+	public var source:String;
 	public var text:String;
-	public var time:Float;
-	public var pos:PosInfos;
+	public var time:Date;
+	@:allow(Game) var _timeout = Game.__logTimeout;
 
-	public function new(text:String, time = 0.):Void
+	@:keep inline public function new(text = "", ?source:String, ?time:Date):Void
 	{
-		// trace("new LogEntry");
-		this.set(text, time);
+		this.set(source, text, time);
 	}
 
-	inline public function set(text:String, time = 0., ?pos:PosInfos):LogEntry
+	inline public function set(source:String, text:String, time:Date):LogEntry
 	{
+		this._timeout = 0;
+		this.source = source;
 		this.text = text;
 		this.time = time;
-		this.pos = pos;
 		return this;
 	}
 
-	public function toString():String
+	inline public function toString():String
 	{
-		var s = text;
-		if (pos?.customParams != null)
-			for (v in pos.customParams)
-				s += ", " + Std.string(v);
-		return s;
+		var str = '<${__formatTime(time)}>';
+		if (source != null)
+			str += ' [$source]';
+		return '$str > $text';
+	}
+
+	@:noCompletion inline static function __formatTime(t:Date):String
+	{
+		if (t == null)
+			return "00:00:00";
+
+		final h = t.getHours();
+		final m = t.getMinutes();
+		final s = t.getSeconds();
+		return '${h > 9 ? '$h' : '0$h'}:${m > 9 ? '$m' : '0$m'}:${s > 9 ? '$s' : '0$s'}';
 	}
 }
-#end

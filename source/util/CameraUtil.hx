@@ -52,7 +52,7 @@ class CameraUtil
 	}
 
 	@:noCompletion inline /*public*/ static function __left(obj:FlxObject, offset:Float, camera:FlxCamera):FlxObject
-	{		
+	{
 		obj.x = camera.viewMarginLeft + offset;
 		return obj;
 	}
@@ -99,19 +99,29 @@ private enum abstract Direction(Int) from Int from FlxDirectionFlags to Int
 	var LEFT_RIGHT = 0x0011;
 	var UP_DOWN    = 0x1100;
 
-	/** Special-case constant meaning no directions. */
+	/**
+		Special-case constant meaning no directions.
+	*/
 	var NONE = 0x0000;
 
-	/** Special-case constant meaning "up". */
+	/**
+		Special-case constant meaning "up".
+	*/
 	var CEILING = 0x0100; // UP;
 
-	/** Special-case constant meaning "down" */
+	/**
+		Special-case constant meaning "down"
+	*/
 	var FLOOR = 0x1000; // DOWN;
 
-	/** Special-case constant meaning "left" and "right". */
+	/**
+		Special-case constant meaning "left" and "right".
+	*/
 	var WALL = 0x0011; // LEFT | RIGHT;
 
-	/** Special-case constant meaning any, or all directions. */
+	/**
+		Special-case constant meaning any, or all directions.
+	*/
 	var ANY = 0x1111; // LEFT | RIGHT | UP | DOWN;
 
 	/**
@@ -164,7 +174,7 @@ private enum abstract Direction(Int) from Int from FlxDirectionFlags to Int
 	**/
 	public inline function without(dir:Direction):Direction return this & ~dir;
 
-	public function toString()
+	@:to public function toString()
 	{
 		if (this == NONE)
 			return "NONE";

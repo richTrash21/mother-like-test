@@ -1,9 +1,8 @@
 package;
 
-import util.CameraUtil;
-import flixel.system.FlxAssets.FlxShader;
-import flixel.addons.display.FlxBackdrop;
+import shaders.WaveEffect;
 import flixel.addons.editors.ogmo.FlxOgmo3Loader;
+import flixel.addons.display.FlxBackdrop;
 import flixel.addons.tile.FlxTilemapExt;
 import flixel.group.FlxSpriteGroup;
 import flixel.group.FlxGroup;
@@ -11,23 +10,19 @@ import flixel.FlxCamera;
 import flixel.FlxSprite;
 
 import shaders.Displacement;
-import shaders.WaveEffect;
+// import shaders.WaveEffect;
 
-import util.ShaderUtil;
 import util.ReflectUtil;
+import util.ShaderUtil;
+// import util.CameraUtil;
 
-import haxe.Timer;
-
-// this is bullshit
-@:access(flixel.addons.editors.ogmo.FlxOgmo3Loader)
 class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO: extend FlxTransitionableState and make it GOOD
 {
 	@:allow(PauseSubState)
-	@:noCompletion static final _cameraLerp = .25;
+	@:noCompletion static final __cameraLerp = .25;
 
 	public var player:Player;
-	public var playerSpawn:FlxPoint = FlxPoint.get();
-	// public var levelCollision:FlxTypedGroup<FlxSprite>;
+	// public var playerSpawn:FlxPoint = FlxPoint.get();
 
 	public var levelData:FlxOgmo3Loader;
 
@@ -36,7 +31,6 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 	public var foreground:FlxGroup;
 
 	public var shaderGroup:ShaderGroup;
-	// public var waveEffect:WaveEffect;
 	public var displacement:Displacement;
 
 	public var cameraUI:FlxCamera; // TODO: add UI and set transition camera to the UI camera
@@ -47,60 +41,24 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 
 	override public function create()
 	{
-		final startTime = Timer.stamp();
+		final startTime = haxe.Timer.stamp();
 
 		// placeholder
 		if (FlxG.sound.music == null || !FlxG.sound.music.active)
 		{
 			// TODO: behave or get banbaned!
-			final banban = FlxG.random.bool() ? Assets.worldMusic("to_sunshine_forest") : Assets.battleMusic("makotos_stage_spunky");
+			final banban = FlxG.random.bool() ? AssetsPath.worldMusic("to_sunshine_forest") : AssetsPath.battleMusic("makotos_stage_spunky");
 			FlxG.sound.playMusic(banban);
 		}
 
-		/*
-		// plain colored bg is boring 🥱
-		final backdrop = new flixel.addons.display.FlxBackdrop(Assets.image("placeholder"));
-		backdrop.color = 0xFFCFCFCF;
-		backdrop.velocity.set(60, 60);
-		// backdrop.scrollFactor.set(0.6, 0.6);
-		// backdrop.setGraphicSize(FlxG.width * 0.5);
-		// backdrop.updateHitbox();
-		add(backdrop);
-
-		waveEffect = new WaveEffect();
-		waveEffect.setEffect(DREAMY, HEAT_WAVE);
-		waveEffect.amplitude = 0.06;
-		waveEffect.frequency = 15;
-		waveEffect.speed = 5;
-		backdrop.shader = waveEffect.shader;
-		FlxG.console.registerObject("waveTest", waveEffect);
-		*/
-
-		// basic colision, will redo later
-		/*final collisionData = [
-			{x: -150,   y: -660,   width: 260,    height: 210},
-			{x:  110,   y: -660,   width: 850,    height: 40},
-			{x:  960,   y: -660,   width: 180,    height: 170},
-			{x: -470,   y: -560,   width: 40,     height: 220},
-			{x: -270,   y: -490,   width: 120,    height: 40},
-			{x: 1100,   y: -490,   width: 40,     height: 560},
-			{x: -470,   y: -340,   width: 190,    height: 130},
-			{x: -470,   y: -210,   width: 1180,   height: 100},
-			{x: -470,   y: -110,   width: 80,     height: 540},
-			{x: -390,   y: -110,   width: 440,    height: 60},
-			{x:  850,   y:  70,    width: 290,    height: 610},
-			{x: -470,   y:  430,   width: 270,    height: 250},
-			{x: -200,   y:  640,   width: 1050,   height: 40}
-		];*/
-
 		shaderGroup = new ShaderGroup();
 
-		levelData = new FlxOgmo3Loader(Assets.data("dev", OGMO), Assets.data(FlxG.random.bool(10) ? "dash_room_lmao" : "dev_room1", JSON));
+		levelData = new FlxOgmo3Loader(AssetsPath.data("dev", OGMO), AssetsPath.data(FlxG.random.bool(10) ? "dash_room_lmao" : "dev_room1", JSON));
 		background = levelData.loadDecals("background", "", loadOgmoSprites);
 		add(background);
 
 		// levelCollision = new FlxTypedGroup<FlxSprite>();
-		levelCollision = levelData.loadTilemapExt(Assets.image("debug_tileset"), "collision");
+		levelCollision = levelData.loadTilemapExt(AssetsPath.image("debug_tileset"), "collision");
 
 		// standart collision tile
 		levelCollision.setTileProperties(0, NONE); // air lol
@@ -123,16 +81,9 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		levelCollision.setTileProperties(8, NONE, (_, _) -> trace("FIRE IN THE HOLE!!!"));
 		add(levelCollision);
 
-		/*for (data in collisionData)
-		{
-			final wall = new FlxSprite(data.x, data.y).makeGraphic(data.width, data.height, FlxColor.MAGENTA);
-			wall.immovable = true;
-			wall.active = false;
-			levelCollision.add(wall);
-		}*/
-
 		// gets player spawn position from map
 		// TODO: make it door dipendant or smth like this
+		final playerSpawn = FlxPoint.get();
 		levelData.loadEntities((entity:EntityData) ->
 			{
 				switch (entity.name)
@@ -148,6 +99,7 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 
 		player = new Player(playerSpawn.x, playerSpawn.y);
 		add(player);
+		playerSpawn.put();
 
 		cameraUI = new FlxCamera();
 		cameraUI.bgColor.alpha = 0;
@@ -157,7 +109,7 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		UIGroup.cameras = [cameraUI];
 		add(UIGroup);
 
-		final money = new FlxSprite(Assets.image("money"));
+		final money = new FlxSprite(AssetsPath.image("money"));
 		money.active = false;
 		UIGroup.add(money);
 
@@ -167,18 +119,13 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 
 		for (i in 0...4)
 		{
-			final iconSpr = new FlxSprite(400, 10).loadGraphic(Assets.image("menu_icons"), true, 50, 50);
+			final iconSpr = new FlxSprite(400, 10).loadGraphic(AssetsPath.image("menu_icons"), true, 50, 50);
 			iconSpr.frame = iconSpr.frames.frames[i];
 			iconSpr.x += (10 + iconSpr.width) * i;
 			iconGroup.add(iconSpr);
-
-			// removing garbage data
-			/*for (frameID in 0...iconSpr.numFrames)
-				if (frameID != i)
-					iconSpr.frames.frames.splice(frameID, 1);*/
 		}
 
-		final selectArrow = new FlxSprite().loadGraphic(Assets.image("menu_arrow"), true, 38, 24);
+		final selectArrow = new FlxSprite().loadGraphic(AssetsPath.image("menu_arrow"), true, 38, 24);
 		selectArrow.animation.add("idle", [0, 1, 2, 1], 12, true);
 		selectArrow.animation.play("idle");
 		UIGroup.add(selectArrow);
@@ -187,7 +134,7 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		selectArrow.setPosition(_item.x + (_item.width - selectArrow.width) * .5, _item.y + _item.height + 5);
 		UIGroup.y = -UIGroup.height;
 
-		playerStats = new FlxSprite(0, FlxG.height, Assets.image("player_card"));
+		playerStats = new FlxSprite(0, FlxG.height, AssetsPath.image("player_card"));
 		playerStats.cameras = [cameraUI];
 		playerStats.y = FlxG.height;
 		playerStats.active = false;
@@ -196,19 +143,20 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		// i hate flixel collision system
 		FlxG.worldBounds.set(0, 0, levelData.level.width, levelData.level.height);
 		FlxG.camera.setScrollBounds(FlxG.worldBounds.x, FlxG.worldBounds.right, FlxG.worldBounds.y, FlxG.worldBounds.bottom);
-		FlxG.camera.follow(player, LOCKON, _cameraLerp);
+		FlxG.camera.follow(player, LOCKON, __cameraLerp);
 		FlxG.camera.snapToTarget();
 		add(shaderGroup);
 
-		displacement = new Displacement();
+		displacement = new Displacement(null);
 		FlxG.camera.filters = [new openfl.filters.ShaderFilter(displacement.shader)];
 
 		super.create();
-		trace("PlayState created in " + Std.int((Timer.stamp() - startTime) * 1000) + "ms WOOOOOOOW :OO");
+		trace("PlayState created in " + ((haxe.Timer.stamp() - startTime) * 1000).int() + "ms WOOOOOOOW :OO");
+		// trace(Type.getClassName(WaveEffect));
 	}
 
 	// welcome to CODING NIGHTMARE ZONE!!
-	function loadOgmoSprites(Data:DecalData, Path:String):FlxSprite
+	function loadOgmoSprites(data:DecalData, path:String):FlxSprite
 	{
 		// disable some flags if needed
 		inline function disableFlagsAndReturn(spr:FlxSprite):FlxSprite
@@ -219,25 +167,25 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 			return spr;
 		}
 
-		// trace(Data);
-		final image = Assets.image(Path + Data.texture.substring(0, Data.texture.indexOf(".")));
-		final sprite:FlxSprite = switch (Std.string(Data.values?.object_type))
+		// trace(data);
+		final image = AssetsPath.image(path + data.texture.substring(0, data.texture.indexOf(".")));
+		final sprite:FlxSprite = switch (data.values?.object_type.string())
 		{
 			case t if (t.startsWith("backdrop")):
-				new FlxBackdrop(image, FlxAxes.fromString(t.substr(t.indexOf("_")+1)), Data.x, Data.y);
+				new FlxBackdrop(image, FlxAxes.fromString(t.substr(t.indexOf("_")+1)), data.x, data.y);
 
 			default:
-				new FlxSprite(Data.x, Data.y, image);
+				new FlxSprite(data.x, data.y, image);
 		}
 
-		if (Data.scaleX != null)
-			sprite.scale.x = Data.scaleX;
-		if (Data.scaleY != null)
-			sprite.scale.y = Data.scaleY;
-		if (Data.rotation != null)
-			sprite.angle = levelData.project.anglesRadians ? flixel.math.FlxAngle.asDegrees(Data.rotation) : Data.rotation;
+		if (data.scaleX != null)
+			sprite.scale.x = data.scaleX;
+		if (data.scaleY != null)
+			sprite.scale.y = data.scaleY;
+		if (data.rotation != null)
+			sprite.angle = levelData.project.anglesRadians ? flixel.math.FlxAngle.asDegrees(data.rotation) : data.rotation;
 
-		if (Data.values == null)
+		if (data.values == null)
 			return disableFlagsAndReturn(sprite);
 
 		// cache shader data if it comes before shader was initialized.
@@ -246,43 +194,45 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		// i specifically set fields order to prevent this kind of bullshit and it still passes through?!??!
 		// TL:DR; yeah ignore all of this stuff above, i was just a little tired from debugging this shit
 		var shaderDataToLoad:String = null;
-		inline function setAdditionalData(Object:FlxSprite, Field:String, Value:Dynamic)
+		inline function setAdditionalData(object:FlxSprite, field:String, value:Dynamic)
 		{
-			final StringValue = Std.string(Value);
-			switch (Field)
+			final stringValue = value.string();
+			switch (field)
 			{
 				case "shader": // create shader
-					if (StringValue == "") return;
+					if (stringValue.length == 0) return;
 
-					Object.shader = shaderGroup.add(cast Type.createInstance(ShaderUtil.shaderList[StringValue], [])).shader;
+					// object.shader =
+					shaderGroup.add(ShaderUtil.getShader(stringValue, object)); // .shader
+					// shaderGroup.add(cast Type.createInstance(ShaderUtil.shaderList[stringValue], [object]));
 					if (shaderDataToLoad != null)
 					{
-						ShaderUtil.parseOgmoShaderValues(Object.shader, shaderDataToLoad);
+						ShaderUtil.parseOgmoShaderValues(object.shader, shaderDataToLoad);
 						shaderDataToLoad = null;
 					}
 
 				case "shader_data": // set shader data
-					if (StringValue == "") 	return;
+					if (stringValue.length == 0) return;
 
-					if (Object.shader == null)
-						shaderDataToLoad = StringValue;
+					if (object.shader == null)
+						shaderDataToLoad = stringValue;
 					else
-						ShaderUtil.parseOgmoShaderValues(Object.shader, StringValue);
+						ShaderUtil.parseOgmoShaderValues(object.shader, stringValue);
 				
 				case "color": // rearange shit cuz ogmo saves color in RRGGBBAA format (whyyy)
-					if (StringValue != "#ffffffff")
-						Object.color = FlxColor.fromString("#" + StringValue.substr(7, 2) + StringValue.substr(1, 6));
+					if (stringValue != "#ffffffff")
+						object.color = FlxColor.fromString("#" + stringValue.substr(7, 2) + stringValue.substr(1, 6));
 
 				case "blend": // string to blend
-					if (StringValue != "")
-						Object.blend = cast (StringValue : openfl.display.BlendMode);
+					if (stringValue.length > 0)
+						object.blend = cast (stringValue : openfl.display.BlendMode);
 
 				default: // everything else
-					ReflectUtil.setPropertyLoop(Object, Field.split("_"), Value);
+					ReflectUtil.setPropertyLoop(object, field.split("_"), value);
 			}
 		}
 
-		final _additionalData = Reflect.fields(Data.values);
+		final _additionalData = Reflect.fields(data.values);
 		_additionalData.remove("object_type");
 		// TODO: extend FlxSprite and add position wraping
 		// _additionalData.remove("wrap_x");
@@ -291,7 +241,7 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		var value:Dynamic;
 		if (_additionalData.length == 1)
 		{
-			value = Reflect.field(Data.values, _additionalData[0]);
+			value = Reflect.field(data.values, _additionalData[0]);
 			if (value != null)
 				setAdditionalData(sprite, _additionalData[0], value);
 		}
@@ -299,7 +249,7 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		{
 			for (field in _additionalData)
 			{
-				value = Reflect.field(Data.values, field);
+				value = Reflect.field(data.values, field);
 				if (value != null) // no value - skip it
 					setAdditionalData(sprite, field, value);
 			}
@@ -308,9 +258,9 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 		return disableFlagsAndReturn(sprite);
 	}
 
-	@:noCompletion var _resetTimer = 0.;
-	@:noCompletion var _statsState = false;
-	@:noCompletion var _UIState = false;
+	@:noCompletion var __resetTimer = 0.;
+	@:noCompletion var __statsState = false;
+	@:noCompletion var __UIState = false;
 
 	override public function update(elapsed:Float)
 	{
@@ -346,12 +296,12 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 
 		if (FlxG.keys.pressed.R)
 		{
-			_resetTimer += elapsed;
-			if (_resetTimer >= 2)
+			__resetTimer += elapsed;
+			if (__resetTimer >= 2)
 				FlxG.resetState();
 		}
 		else if (FlxG.keys.justReleased.R)
-			_resetTimer = 0;
+			__resetTimer = 0;
 
 		// i love mother 2's battle backgrounds sm
 		if (FlxG.keys.justPressed.F1)
@@ -359,16 +309,16 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 
 		// TODO: less bullshit like this
 		if (FlxG.keys.justPressed.X)
-			_statsState = !_statsState;
+			__statsState = !__statsState;
 
 		if (FlxG.keys.justPressed.C)
-			_UIState = !_UIState;
+			__UIState = !__UIState;
 		
-		final _statsPos = _statsState ? FlxG.height - playerStats.height : FlxG.height;
+		final _statsPos = __statsState ? FlxG.height - playerStats.height : FlxG.height;
 		if (playerStats.y != _statsPos)
 			playerStats.y = FlxMath.lerp(playerStats.y, _statsPos, elapsed * 10);
 
-		final _UIPos = _UIState ? 0 : -UIGroup.height;
+		final _UIPos = __UIState ? 0 : -UIGroup.height;
 		if (UIGroup.y != _UIPos)
 			UIGroup.y = FlxMath.lerp(UIGroup.y, _UIPos, elapsed * 10);
 	}
@@ -389,22 +339,22 @@ class PlayState extends flixel.addons.transition.FlxTransitionableState // TODO:
 	}
 	#end
 
-	override function transitionIn()
+	override public function transitionIn()
 	{
 		super.transitionIn();
 		persistentUpdate = true;
 	}
 
-	override function transitionOut(?OnExit:()->Void)
+	override function transitionOut(?onExit:()->Void)
 	{
-		super.transitionOut(OnExit);
+		super.transitionOut(onExit);
 		persistentUpdate = true;
 		player.readInput = false;
 	}
 
-	override function destroy()
+	override public function destroy()
 	{
-		// FlxG.console.removeByAlias("waveTest");
+		displacement.destroy();
 		super.destroy();
 	}
 }
